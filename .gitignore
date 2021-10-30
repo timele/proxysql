@@ -188,3 +188,9 @@ heaptrack.*
 test/tap/tests/galera_1_timeout_count
 test/tap/tests/galera_2_timeout_no_count
 test/tap/tests/setparser_test
+
+# e2e tests
+.venv/
+__pycache__/
+deps/libssl/openssl-openssl-3.0.0/
+

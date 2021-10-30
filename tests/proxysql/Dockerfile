@@ -9,9 +9,10 @@ RUN apt-get update && apt-get install -y\
 	make\
 	g++\
 	gcc\
-	# gdb\
-	# gdbserver\
-	# git\
+	bzip2\ 
+	libgnutls28-dev\
+	patch\
+	git\
 	libmysqlclient-dev\
 	libssl-dev\
 	libtool
@@ -22,6 +23,7 @@ RUN apt-get update && apt-get install -y\
 # RUN mkdir /opt/proxysql
 # RUN chmod 755 /opt/proxysql
 # COPY ./proxysql /opt/
+RUN ldconfig
 ARG PROXYSQL_CONF_FILE
 ADD ${PROXYSQL_CONF_FILE} /etc/proxysql.cnf
 RUN mkdir -p /var/lib/proxysql
