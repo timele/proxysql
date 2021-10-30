@@ -1,0 +1,17 @@
+## Executing e2e tests
+
+### Prepare local test environment with python:
+```bash
+python3 -m venv .venv
+pip install -r tests/requirements.txt
+```
+
+### Execute e2e tests:
+```bash
+cd tests/
+./gencerts_shell.sh
+pytest
+```
+
+## Access modes of docker generated files
+You may need to tweak access modes of files in tests/certs/ and in tests/logs/
