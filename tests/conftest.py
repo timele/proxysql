@@ -41,22 +41,14 @@ class Node_Service:
 
     def append_ssl_settings(self, config):
         """ append ssl settings to config object """
-        config["client_flags"] = [ClientFlag.SSL]
-        config["tls_versions"] = ["TLSv1.3"]
+        config["client_flags"] = [ClientFlag.SECURE_CONNECTION, ClientFlag.SSL]
+        config["tls_versions"] = ["TLSv1.2", "TLSv1.3"]
         config["ssl_ca"] = self.ssl_settings.ca_file
         config["ssl_cert"] = self.ssl_settings.cert_file
         config["ssl_key"] = self.ssl_settings.key_file
         config["ssl_disabled"] = False
-        config["ssl_verify_cert"] = True
-        # ssl = {
-        #     "client_flags": [ClientFlag.SSL],
-        #     "tls_versions": ["TLSv1.3"],
-        #     "ssl_ca": self.ssl_settings.ca_file,
-        #     "ssl_cert": self.ssl_settings.cert_file,
-        #     "ssl_key": self.ssl_settings.key_file
-        # }
-        # config["ssl"] = ssl
-
+        # config["ssl_verify_cert"] = True
+        # config["ssl"] = {"fake_flag_to_enable_tls": True}
 
     def service_settings(self):
         """ construct database connection settings config """
