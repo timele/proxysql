@@ -23,6 +23,7 @@ services:
       - "6032:6032" # admin port
     volumes:
       - ../../proxysql:/opt/proxysql
+      - ../tests/logs:/tmp/logs:rw
     privileged: true
     networks:
       testing_net:
@@ -38,7 +39,7 @@ services:
                     "--character-set-server=utf8mb4",
                     "--collation-server=utf8mb4_unicode_ci",
                     "--bind_address=0.0.0.0",
-                    "--require_secure_transport=ON",
+                    # "--require_secure_transport=ON",
                     "--ssl-ca=/etc/certs/ca.pem",
                     "--ssl-cert=/etc/certs/server-cert.pem",
                     "--ssl-key=/etc/certs/server-key.pem",
@@ -47,9 +48,9 @@ services:
                     "--general_log=ON",
                     "--general_log_file=/tmp/logs/mysqld0.log"]
     volumes:
-      - ./tests/mysql/init-db.sql:/docker-entrypoint-initdb.d/init.sql
-      - ./tests/certs:/etc/certs/
-      - ./tests/logs:/tmp/logs/
+      - ../tests/mysql/init-db.sql:/docker-entrypoint-initdb.d/init.sql
+      - ../tests/certs:/etc/certs
+      - ../tests/logs:/tmp/logs
     environment:
       MYSQL_ROOT_USER: 'root'
       MYSQL_ROOT_PASSWORD: 'root'
@@ -75,7 +76,7 @@ services:
                     "--character-set-server=utf8mb4",
                     "--collation-server=utf8mb4_unicode_ci",
                     "--bind_address=0.0.0.0",
-                    "--require_secure_transport=ON",
+                    # "--require_secure_transport=ON",
                     "--ssl-ca=/etc/certs/ca.pem",
                     "--ssl-cert=/etc/certs/server-cert.pem",
                     "--ssl-key=/etc/certs/server-key.pem",
@@ -84,9 +85,9 @@ services:
                     "--general_log=ON",
                     "--general_log_file=/tmp/logs/mysqld1.log"]
     volumes:
-      - ./tests/mysql/init-db.sql:/docker-entrypoint-initdb.d/init.sql
-      - ./tests/certs:/etc/certs/
-      - ./tests/logs:/tmp/logs/
+      - ../tests/mysql/init-db.sql:/docker-entrypoint-initdb.d/init.sql
+      - ../tests/certs:/etc/certs
+      - ../tests/logs:/tmp/logs
     environment:
       MYSQL_ROOT_USER: 'root'
       MYSQL_ROOT_PASSWORD: 'root'
@@ -110,7 +111,7 @@ services:
                     "--character-set-server=utf8mb4",
                     "--collation-server=utf8mb4_unicode_ci",
                     "--bind_address=0.0.0.0",
-                    "--require_secure_transport=ON",
+                    # "--require_secure_transport=ON",
                     "--ssl-ca=/etc/certs/ca.pem",
                     "--ssl-cert=/etc/certs/server-cert.pem",
                     "--ssl-key=/etc/certs/server-key.pem",
@@ -119,9 +120,9 @@ services:
                     "--general_log=ON",
                     "--general_log_file=/tmp/logs/mysqld2.log"]
     volumes:
-      - ./tests/mysql/init-db.sql:/docker-entrypoint-initdb.d/init.sql
-      - ./tests/certs:/etc/certs/
-      - ./proxysql/tests/logs:/tmp/logs/
+      - ../tests/mysql/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ../tests/certs:/etc/certs:rw
+      - ../tests/logs:/tmp/logs:rw
     environment:
       MYSQL_ROOT_USER: 'root'
       MYSQL_ROOT_PASSWORD: 'root'

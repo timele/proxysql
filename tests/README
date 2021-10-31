@@ -6,6 +6,23 @@ python3 -m venv .venv
 pip install -r tests/requirements.txt
 ```
 
+### Generate SSL files
+To prepare SSL files required for testings execute:
+```bash
+cd tests/
+./gencerts_shell.sh
+chmod ugoa+rw certs/*.pem
+```
+
+## Access modes of docker generated files
+You may need to tweak access modes of files in tests/certs/ and in tests/logs/
+```bash
+touch logs/mysqld0.log
+touch logs/mysqld1.log
+touch logs/mysqld2.log
+chmod ugoa+rw logs/*.log
+```
+
 ### Execute e2e tests:
 ```bash
 cd tests/
@@ -13,5 +30,3 @@ cd tests/
 pytest
 ```
 
-## Access modes of docker generated files
-You may need to tweak access modes of files in tests/certs/ and in tests/logs/
