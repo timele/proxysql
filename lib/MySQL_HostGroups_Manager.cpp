@@ -836,7 +836,7 @@ void MySrvConnList::drop_all_connections() {
 }
 
 
-MySrvC::MySrvC(char *add, uint16_t p, uint16_t gp, unsigned int _weight, enum MySerStatus _status, unsigned int _compression /*, uint8_t _charset */, unsigned int _max_connections, unsigned int _max_replication_lag, unsigned int _use_ssl, unsigned int _max_latency_ms, char *_comment) {
+MySrvC::MySrvC(char *add, uint16_t p, uint16_t gp, unsigned int _weight, enum MySerStatus _status, unsigned int _compression /*, uint8_t _charset */, unsigned int _max_connections, unsigned int _max_replication_lag, unsigned int _use_ssl, unsigned int _max_latency_ms, char *_comment, char* _ssl_ca, char* _ssl_cert, char* _ssl_key) {
 	address=strdup(add);
 	port=p;
 	gtid_port=gp;
@@ -846,7 +846,10 @@ MySrvC::MySrvC(char *add, uint16_t p, uint16_t gp, unsigned int _weight, enum My
 	max_connections=_max_connections;
 	max_replication_lag=_max_replication_lag;
 	use_ssl=_use_ssl;
-	cur_replication_lag_count=0;
+	ssl_ca = _ssl_ca;
+	ssl_cert = _ssl_cert;
+	ssl_key = _ssl_key;
+ 	cur_replication_lag_count=0;
 	max_latency_us=_max_latency_ms*1000;
 	current_latency_us=0;
 	aws_aurora_current_lag_us = 0;
@@ -1556,8 +1559,8 @@ int MySQL_HostGroups_Manager::servers_add(SQLite3_result *resultset) {
 	sqlite3_stmt *statement1=NULL;
 	sqlite3_stmt *statement32=NULL;
 	//sqlite3 *mydb3=mydb->get_db();
-	char *query1=(char *)"INSERT INTO mysql_servers_incoming VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)";
-	char *query32=(char *)"INSERT INTO mysql_servers_incoming VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12), (?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24), (?25, ?26, ?27, ?28, ?29, ?30, ?31, ?32, ?33, ?34, ?35, ?36), (?37, ?38, ?39, ?40, ?41, ?42, ?43, ?44, ?45, ?46, ?47, ?48), (?49, ?50, ?51, ?52, ?53, ?54, ?55, ?56, ?57, ?58, ?59, ?60), (?61, ?62, ?63, ?64, ?65, ?66, ?67, ?68, ?69, ?70, ?71, ?72), (?73, ?74, ?75, ?76, ?77, ?78, ?79, ?80, ?81, ?82, ?83, ?84), (?85, ?86, ?87, ?88, ?89, ?90, ?91, ?92, ?93, ?94, ?95, ?96), (?97, ?98, ?99, ?100, ?101, ?102, ?103, ?104, ?105, ?106, ?107, ?108), (?109, ?110, ?111, ?112, ?113, ?114, ?115, ?116, ?117, ?118, ?119, ?120), (?121, ?122, ?123, ?124, ?125, ?126, ?127, ?128, ?129, ?130, ?131, ?132), (?133, ?134, ?135, ?136, ?137, ?138, ?139, ?140, ?141, ?142, ?143, ?144), (?145, ?146, ?147, ?148, ?149, ?150, ?151, ?152, ?153, ?154, ?155, ?156), (?157, ?158, ?159, ?160, ?161, ?162, ?163, ?164, ?165, ?166, ?167, ?168), (?169, ?170, ?171, ?172, ?173, ?174, ?175, ?176, ?177, ?178, ?179, ?180), (?181, ?182, ?183, ?184, ?185, ?186, ?187, ?188, ?189, ?190, ?191, ?192), (?193, ?194, ?195, ?196, ?197, ?198, ?199, ?200, ?201, ?202, ?203, ?204), (?205, ?206, ?207, ?208, ?209, ?210, ?211, ?212, ?213, ?214, ?215, ?216), (?217, ?218, ?219, ?220, ?221, ?222, ?223, ?224, ?225, ?226, ?227, ?228), (?229, ?230, ?231, ?232, ?233, ?234, ?235, ?236, ?237, ?238, ?239, ?240), (?241, ?242, ?243, ?244, ?245, ?246, ?247, ?248, ?249, ?250, ?251, ?252), (?253, ?254, ?255, ?256, ?257, ?258, ?259, ?260, ?261, ?262, ?263, ?264), (?265, ?266, ?267, ?268, ?269, ?270, ?271, ?272, ?273, ?274, ?275, ?276), (?277, ?278, ?279, ?280, ?281, ?282, ?283, ?284, ?285, ?286, ?287, ?288), (?289, ?290, ?291, ?292, ?293, ?294, ?295, ?296, ?297, ?298, ?299, ?300), (?301, ?302, ?303, ?304, ?305, ?306, ?307, ?308, ?309, ?310, ?311, ?312), (?313, ?314, ?315, ?316, ?317, ?318, ?319, ?320, ?321, ?322, ?323, ?324), (?325, ?326, ?327, ?328, ?329, ?330, ?331, ?332, ?333, ?334, ?335, ?336), (?337, ?338, ?339, ?340, ?341, ?342, ?343, ?344, ?345, ?346, ?347, ?348), (?349, ?350, ?351, ?352, ?353, ?354, ?355, ?356, ?357, ?358, ?359, ?360), (?361, ?362, ?363, ?364, ?365, ?366, ?367, ?368, ?369, ?370, ?371, ?372), (?373, ?374, ?375, ?376, ?377, ?378, ?379, ?380, ?381, ?382, ?383, ?384)";
+	char *query1=(char *)"INSERT INTO mysql_servers_incoming VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)";
+	char *query32=(char *)"INSERT INTO mysql_servers_incoming VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15), (?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, ?25, ?26, ?27, ?28, ?29, ?30), (?31, ?32, ?33, ?34, ?35, ?36, ?37, ?38, ?39, ?40, ?41, ?42, ?43, ?44, ?45), (?46, ?47, ?48, ?49, ?50, ?51, ?52, ?53, ?54, ?55, ?56, ?57, ?58, ?59, ?60), (?61, ?62, ?63, ?64, ?65, ?66, ?67, ?68, ?69, ?70, ?71, ?72, ?73, ?74, ?75), (?76, ?77, ?78, ?79, ?80, ?81, ?82, ?83, ?84, ?85, ?86, ?87, ?88, ?89, ?90), (?91, ?92, ?93, ?94, ?95, ?96, ?97, ?98, ?99, ?100, ?101, ?102, ?103, ?104, ?105), (?106, ?107, ?108, ?109, ?110, ?111, ?112, ?113, ?114, ?115, ?116, ?117, ?118, ?119, ?120), (?121, ?122, ?123, ?124, ?125, ?126, ?127, ?128, ?129, ?130, ?131, ?132, ?133, ?134, ?135), (?136, ?137, ?138, ?139, ?140, ?141, ?142, ?143, ?144, ?145, ?146, ?147, ?148, ?149, ?150), (?151, ?152, ?153, ?154, ?155, ?156, ?157, ?158, ?159, ?160, ?161, ?162, ?163, ?164, ?165), (?166, ?167, ?168, ?169, ?170, ?171, ?172, ?173, ?174, ?175, ?176, ?177, ?178, ?179, ?180), (?181, ?182, ?183, ?184, ?185, ?186, ?187, ?188, ?189, ?190, ?191, ?192, ?193, ?194, ?195), (?196, ?197, ?198, ?199, ?200, ?201, ?202, ?203, ?204, ?205, ?206, ?207, ?208, ?209, ?210), (?211, ?212, ?213, ?214, ?215, ?216, ?217, ?218, ?219, ?220, ?221, ?222, ?223, ?224, ?225), (?226, ?227, ?228, ?229, ?230, ?231, ?232, ?233, ?234, ?235, ?236, ?237, ?238, ?239, ?240), (?241, ?242, ?243, ?244, ?245, ?246, ?247, ?248, ?249, ?250, ?251, ?252, ?253, ?254, ?255), (?256, ?257, ?258, ?259, ?260, ?261, ?262, ?263, ?264, ?265, ?266, ?267, ?268, ?269, ?270), (?271, ?272, ?273, ?274, ?275, ?276, ?277, ?278, ?279, ?280, ?281, ?282, ?283, ?284, ?285), (?286, ?287, ?288, ?289, ?290, ?291, ?292, ?293, ?294, ?295, ?296, ?297, ?298, ?299, ?300), (?301, ?302, ?303, ?304, ?305, ?306, ?307, ?308, ?309, ?310, ?311, ?312, ?313, ?314, ?315), (?316, ?317, ?318, ?319, ?320, ?321, ?322, ?323, ?324, ?325, ?326, ?327, ?328, ?329, ?330), (?331, ?332, ?333, ?334, ?335, ?336, ?337, ?338, ?339, ?340, ?341, ?342, ?343, ?344, ?345), (?346, ?347, ?348, ?349, ?350, ?351, ?352, ?353, ?354, ?355, ?356, ?357, ?358, ?359, ?360), (?361, ?362, ?363, ?364, ?365, ?366, ?367, ?368, ?369, ?370, ?371, ?372, ?373, ?374, ?375), (?376, ?377, ?378, ?379, ?380, ?381, ?382, ?383, ?384, ?385, ?386, ?387, ?388, ?389, ?390), (?391, ?392, ?393, ?394, ?395, ?396, ?397, ?398, ?399, ?400, ?401, ?402, ?403, ?404, ?405), (?406, ?407, ?408, ?409, ?410, ?411, ?412, ?413, ?414, ?415, ?416, ?417, ?418, ?419, ?420), (?421, ?422, ?423, ?424, ?425, ?426, ?427, ?428, ?429, ?430, ?431, ?432, ?433, ?434, ?435), (?436, ?437, ?438, ?439, ?440, ?441, ?442, ?443, ?444, ?445, ?446, ?447, ?448, ?449, ?450), (?451, ?452, ?453, ?454, ?455, ?456, ?457, ?458, ?459, ?460, ?461, ?462, ?463, ?464, ?465), (?466, ?467, ?468, ?469, ?470, ?471, ?472, ?473, ?474, ?475, ?476, ?477, ?478, ?479, ?480)";
 	//rc=(*proxy_sqlite3_prepare_v2)(mydb3, query1, -1, &statement1, 0);
 	rc = mydb->prepare_v2(query1, &statement1);
 	ASSERT_SQLITE_OK(rc, mydb);
@@ -1586,18 +1589,21 @@ int MySQL_HostGroups_Manager::servers_add(SQLite3_result *resultset) {
 		}
 		int idx=row_idx%32;
 		if (row_idx<max_bulk_row_idx) { // bulk
-			rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*12)+1, atoi(r1->fields[0])); ASSERT_SQLITE_OK(rc, mydb);
-			rc=(*proxy_sqlite3_bind_text)(statement32, (idx*12)+2, r1->fields[1], -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
-			rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*12)+3, atoi(r1->fields[2])); ASSERT_SQLITE_OK(rc, mydb);
-			rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*12)+4, atoi(r1->fields[3])); ASSERT_SQLITE_OK(rc, mydb);
-			rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*12)+5, atoi(r1->fields[5])); ASSERT_SQLITE_OK(rc, mydb);
-			rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*12)+6, status1); ASSERT_SQLITE_OK(rc, mydb);
-			rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*12)+7, atoi(r1->fields[6])); ASSERT_SQLITE_OK(rc, mydb);
-			rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*12)+8, atoi(r1->fields[7])); ASSERT_SQLITE_OK(rc, mydb);
-			rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*12)+9, atoi(r1->fields[8])); ASSERT_SQLITE_OK(rc, mydb);
-			rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*12)+10, atoi(r1->fields[9])); ASSERT_SQLITE_OK(rc, mydb);
-			rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*12)+11, atoi(r1->fields[10])); ASSERT_SQLITE_OK(rc, mydb);
-			rc=(*proxy_sqlite3_bind_text)(statement32, (idx*12)+12, r1->fields[11], -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
+			rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+1, atoi(r1->fields[0])); ASSERT_SQLITE_OK(rc, mydb);
+			rc=(*proxy_sqlite3_bind_text)(statement32, (idx*15)+2, r1->fields[1], -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
+			rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+3, atoi(r1->fields[2])); ASSERT_SQLITE_OK(rc, mydb);
+			rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+4, atoi(r1->fields[3])); ASSERT_SQLITE_OK(rc, mydb);
+			rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+5, atoi(r1->fields[5])); ASSERT_SQLITE_OK(rc, mydb);
+			rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+6, status1); ASSERT_SQLITE_OK(rc, mydb);
+			rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+7, atoi(r1->fields[6])); ASSERT_SQLITE_OK(rc, mydb);
+			rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+8, atoi(r1->fields[7])); ASSERT_SQLITE_OK(rc, mydb);
+			rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+9, atoi(r1->fields[8])); ASSERT_SQLITE_OK(rc, mydb);
+			rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+10, atoi(r1->fields[9])); ASSERT_SQLITE_OK(rc, mydb);
+			rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+11, atoi(r1->fields[10])); ASSERT_SQLITE_OK(rc, mydb);
+			rc=(*proxy_sqlite3_bind_text)(statement32, (idx*15)+12, r1->fields[11], -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
+			rc=(*proxy_sqlite3_bind_text)(statement32, (idx*15)+13, r1->fields[12], -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
+			rc=(*proxy_sqlite3_bind_text)(statement32, (idx*15)+14, r1->fields[13], -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
+			rc=(*proxy_sqlite3_bind_text)(statement32, (idx*15)+15, r1->fields[14], -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
 			if (idx==31) {
 				SAFE_SQLITE3_STEP2(statement32);
 				rc=(*proxy_sqlite3_clear_bindings)(statement32); ASSERT_SQLITE_OK(rc, mydb);
@@ -1616,6 +1622,9 @@ int MySQL_HostGroups_Manager::servers_add(SQLite3_result *resultset) {
 			rc=(*proxy_sqlite3_bind_int64)(statement1, 10, atoi(r1->fields[9])); ASSERT_SQLITE_OK(rc, mydb);
 			rc=(*proxy_sqlite3_bind_int64)(statement1, 11, atoi(r1->fields[10])); ASSERT_SQLITE_OK(rc, mydb);
 			rc=(*proxy_sqlite3_bind_text)(statement1, 12, r1->fields[11], -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
+			rc=(*proxy_sqlite3_bind_text)(statement1, 13, r1->fields[12], -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
+			rc=(*proxy_sqlite3_bind_text)(statement1, 14, r1->fields[13], -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
+			rc=(*proxy_sqlite3_bind_text)(statement1, 15, r1->fields[14], -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
 			SAFE_SQLITE3_STEP2(statement1);
 			rc=(*proxy_sqlite3_clear_bindings)(statement1); ASSERT_SQLITE_OK(rc, mydb);
 			rc=(*proxy_sqlite3_reset)(statement1); ASSERT_SQLITE_OK(rc, mydb);
@@ -1698,13 +1707,13 @@ bool MySQL_HostGroups_Manager::commit() {
 
 // INSERT OR IGNORE INTO mysql_servers SELECT ... FROM mysql_servers_incoming
 //	proxy_debug(PROXY_DEBUG_MYSQL_CONNPOOL, 4, "INSERT OR IGNORE INTO mysql_servers(hostgroup_id, hostname, port, weight, status, compression, max_connections) SELECT hostgroup_id, hostname, port, weight, status, compression, max_connections FROM mysql_servers_incoming\n");
-	mydb->execute("INSERT OR IGNORE INTO mysql_servers(hostgroup_id, hostname, port, gtid_port, weight, status, compression, max_connections, max_replication_lag, use_ssl, max_latency_ms, comment) SELECT hostgroup_id, hostname, port, gtid_port, weight, status, compression, max_connections, max_replication_lag, use_ssl, max_latency_ms, comment FROM mysql_servers_incoming");
+	mydb->execute("INSERT OR IGNORE INTO mysql_servers(hostgroup_id, hostname, port, gtid_port, weight, status, compression, max_connections, max_replication_lag, use_ssl, max_latency_ms, comment, ssl_ca, ssl_cert, ssl_key) SELECT hostgroup_id, hostname, port, gtid_port, weight, status, compression, max_connections, max_replication_lag, use_ssl, max_latency_ms, comment, ssl_ca, ssl_cert, ssl_key FROM mysql_servers_incoming");
 
 
 	// SELECT FROM mysql_servers whatever is not identical in mysql_servers_incoming, or where mem_pointer=0 (where there is no pointer yet)
-	query=(char *)"SELECT t1.*, t2.gtid_port, t2.weight, t2.status, t2.compression, t2.max_connections, t2.max_replication_lag, t2.use_ssl, t2.max_latency_ms, t2.comment FROM mysql_servers t1 JOIN mysql_servers_incoming t2 ON (t1.hostgroup_id=t2.hostgroup_id AND t1.hostname=t2.hostname AND t1.port=t2.port) WHERE mem_pointer=0 OR t1.gtid_port<>t2.gtid_port OR t1.weight<>t2.weight OR t1.status<>t2.status OR t1.compression<>t2.compression OR t1.max_connections<>t2.max_connections OR t1.max_replication_lag<>t2.max_replication_lag OR t1.use_ssl<>t2.use_ssl OR t1.max_latency_ms<>t2.max_latency_ms or t1.comment<>t2.comment";
+	query=(char *)"SELECT t1.*, t2.gtid_port, t2.weight, t2.status, t2.compression, t2.max_connections, t2.max_replication_lag, t2.use_ssl, t2.max_latency_ms, t2.comment, t2.ssl_ca, t2.ssl_cert, t2.ssl_key FROM mysql_servers t1 JOIN mysql_servers_incoming t2 ON (t1.hostgroup_id=t2.hostgroup_id AND t1.hostname=t2.hostname AND t1.port=t2.port) WHERE mem_pointer=0 OR t1.gtid_port<>t2.gtid_port OR t1.weight<>t2.weight OR t1.status<>t2.status OR t1.compression<>t2.compression OR t1.max_connections<>t2.max_connections OR t1.max_replication_lag<>t2.max_replication_lag OR t1.use_ssl<>t2.use_ssl OR t1.max_latency_ms<>t2.max_latency_ms or t1.comment<>t2.comment";
 	proxy_debug(PROXY_DEBUG_MYSQL_CONNPOOL, 4, "%s\n", query);
-  mydb->execute_statement(query, &error , &cols , &affected_rows , &resultset);
+    mydb->execute_statement(query, &error , &cols , &affected_rows , &resultset);
 	if (error) {
 		proxy_error("Error on %s : %s\n", query, error);
 	} else {
@@ -1729,14 +1738,14 @@ bool MySQL_HostGroups_Manager::commit() {
 
 		for (std::vector<SQLite3_row *>::iterator it = resultset->rows.begin() ; it != resultset->rows.end(); ++it) {
 			SQLite3_row *r=*it;
-			long long ptr=atoll(r->fields[12]); // increase this index every time a new column is added
+			long long ptr=atoll(r->fields[15]); // increase this index every time a new column is added
 			proxy_debug(PROXY_DEBUG_MYSQL_CONNPOOL, 5, "Server %s:%d , weight=%d, status=%d, mem_pointer=%llu, hostgroup=%d, compression=%d\n", r->fields[1], atoi(r->fields[2]), atoi(r->fields[4]), (MySerStatus) atoi(r->fields[5]), ptr, atoi(r->fields[0]), atoi(r->fields[6]));
 			//fprintf(stderr,"%lld\n", ptr);
 			if (ptr==0) {
 				if (GloMTH->variables.hostgroup_manager_verbose) {
 					proxy_info("Creating new server in HG %d : %s:%d , gtid_port=%d, weight=%d, status=%d\n", atoi(r->fields[0]), r->fields[1], atoi(r->fields[2]), atoi(r->fields[3]), atoi(r->fields[4]), (MySerStatus) atoi(r->fields[5]));
 				}
-				MySrvC *mysrvc=new MySrvC(r->fields[1], atoi(r->fields[2]), atoi(r->fields[3]), atoi(r->fields[4]), (MySerStatus) atoi(r->fields[5]), atoi(r->fields[6]), atoi(r->fields[7]), atoi(r->fields[8]), atoi(r->fields[9]), atoi(r->fields[10]), r->fields[11]); // add new fields here if adding more columns in mysql_servers
+				MySrvC *mysrvc=new MySrvC(r->fields[1], atoi(r->fields[2]), atoi(r->fields[3]), atoi(r->fields[4]), (MySerStatus) atoi(r->fields[5]), atoi(r->fields[6]), atoi(r->fields[7]), atoi(r->fields[8]), atoi(r->fields[9]), atoi(r->fields[10]), r->fields[11], r->fields[12], r->fields[13], r->fields[14]); // add new fields here if adding more columns in mysql_servers
 				proxy_debug(PROXY_DEBUG_MYSQL_CONNPOOL, 5, "Adding new server %s:%d , weight=%d, status=%d, mem_ptr=%p into hostgroup=%d\n", r->fields[1], atoi(r->fields[2]), atoi(r->fields[4]), (MySerStatus) atoi(r->fields[5]), mysrvc, atoi(r->fields[0]));
 				add(mysrvc,atoi(r->fields[0]));
 				ptr=(uintptr_t)mysrvc;
@@ -1756,39 +1765,39 @@ bool MySQL_HostGroups_Manager::commit() {
 				bool run_update=false;
 				MySrvC *mysrvc=(MySrvC *)ptr;
 				// carefully increase the 2nd index by 1 for every new column added
-				if (atoi(r->fields[3])!=atoi(r->fields[13])) {
+				if (atoi(r->fields[3])!=atoi(r->fields[16])) {
 					if (GloMTH->variables.hostgroup_manager_verbose)
-						proxy_info("Changing gtid_port for server %u:%s:%d (%s:%d) from %d (%d) to %d\n" , mysrvc->myhgc->hid , mysrvc->address, mysrvc->port, r->fields[1], atoi(r->fields[2]), atoi(r->fields[3]) , mysrvc->gtid_port , atoi(r->fields[13]));
-					mysrvc->gtid_port=atoi(r->fields[13]);
+						proxy_info("Changing gtid_port for server %u:%s:%d (%s:%d) from %d (%d) to %d\n" , mysrvc->myhgc->hid , mysrvc->address, mysrvc->port, r->fields[1], atoi(r->fields[2]), atoi(r->fields[3]) , mysrvc->gtid_port , atoi(r->fields[16]));
+					mysrvc->gtid_port=atoi(r->fields[16]);
 				}
 
-				if (atoi(r->fields[4])!=atoi(r->fields[14])) {
+				if (atoi(r->fields[4])!=atoi(r->fields[17])) {
 					if (GloMTH->variables.hostgroup_manager_verbose)
-						proxy_debug(PROXY_DEBUG_MYSQL_CONNPOOL, 5, "Changing weight for server %d:%s:%d (%s:%d) from %d (%d) to %d\n" , mysrvc->myhgc->hid , mysrvc->address, mysrvc->port, r->fields[1], atoi(r->fields[2]), atoi(r->fields[4]) , mysrvc->weight , atoi(r->fields[14]));
-					mysrvc->weight=atoi(r->fields[14]);
+						proxy_debug(PROXY_DEBUG_MYSQL_CONNPOOL, 5, "Changing weight for server %d:%s:%d (%s:%d) from %d (%d) to %d\n" , mysrvc->myhgc->hid , mysrvc->address, mysrvc->port, r->fields[1], atoi(r->fields[2]), atoi(r->fields[4]) , mysrvc->weight , atoi(r->fields[17]));
+					mysrvc->weight=atoi(r->fields[17]);
 				}
-				if (atoi(r->fields[5])!=atoi(r->fields[15])) {
+				if (atoi(r->fields[5])!=atoi(r->fields[18])) {
 					if (GloMTH->variables.hostgroup_manager_verbose)
-						proxy_info("Changing status for server %d:%s:%d (%s:%d) from %d (%d) to %d\n" , mysrvc->myhgc->hid , mysrvc->address, mysrvc->port, r->fields[1], atoi(r->fields[2]), atoi(r->fields[5]) , mysrvc->status , atoi(r->fields[15]));
-					mysrvc->status=(MySerStatus)atoi(r->fields[15]);
+						proxy_info("Changing status for server %d:%s:%d (%s:%d) from %d (%d) to %d\n" , mysrvc->myhgc->hid , mysrvc->address, mysrvc->port, r->fields[1], atoi(r->fields[2]), atoi(r->fields[5]) , mysrvc->status , atoi(r->fields[18]));
+					mysrvc->status=(MySerStatus)atoi(r->fields[18]);
 					if (mysrvc->status==MYSQL_SERVER_STATUS_SHUNNED) {
 						mysrvc->shunned_automatic=false;
 					}
 				}
-				if (atoi(r->fields[6])!=atoi(r->fields[16])) {
+				if (atoi(r->fields[6])!=atoi(r->fields[19])) {
 					if (GloMTH->variables.hostgroup_manager_verbose)
-						proxy_info("Changing compression for server %d:%s:%d (%s:%d) from %d (%d) to %d\n" , mysrvc->myhgc->hid , mysrvc->address, mysrvc->port, r->fields[1], atoi(r->fields[2]), atoi(r->fields[6]) , mysrvc->compression , atoi(r->fields[16]));
-					mysrvc->compression=atoi(r->fields[16]);
+						proxy_info("Changing compression for server %d:%s:%d (%s:%d) from %d (%d) to %d\n" , mysrvc->myhgc->hid , mysrvc->address, mysrvc->port, r->fields[1], atoi(r->fields[2]), atoi(r->fields[6]) , mysrvc->compression , atoi(r->fields[19]));
+					mysrvc->compression=atoi(r->fields[19]);
 				}
-				if (atoi(r->fields[7])!=atoi(r->fields[17])) {
+				if (atoi(r->fields[7])!=atoi(r->fields[20])) {
 					if (GloMTH->variables.hostgroup_manager_verbose)
-					proxy_info("Changing max_connections for server %d:%s:%d (%s:%d) from %d (%d) to %d\n" , mysrvc->myhgc->hid , mysrvc->address, mysrvc->port, r->fields[1], atoi(r->fields[2]), atoi(r->fields[7]) , mysrvc->max_connections , atoi(r->fields[17]));
-					mysrvc->max_connections=atoi(r->fields[17]);
+					proxy_info("Changing max_connections for server %d:%s:%d (%s:%d) from %d (%d) to %d\n" , mysrvc->myhgc->hid , mysrvc->address, mysrvc->port, r->fields[1], atoi(r->fields[2]), atoi(r->fields[7]) , mysrvc->max_connections , atoi(r->fields[20]));
+					mysrvc->max_connections=atoi(r->fields[20]);
 				}
-				if (atoi(r->fields[8])!=atoi(r->fields[18])) {
+				if (atoi(r->fields[8])!=atoi(r->fields[21])) {
 					if (GloMTH->variables.hostgroup_manager_verbose)
-						proxy_info("Changing max_replication_lag for server %u:%s:%d (%s:%d) from %d (%d) to %d\n" , mysrvc->myhgc->hid , mysrvc->address, mysrvc->port, r->fields[1], atoi(r->fields[2]), atoi(r->fields[8]) , mysrvc->max_replication_lag , atoi(r->fields[18]));
-					mysrvc->max_replication_lag=atoi(r->fields[18]);
+						proxy_info("Changing max_replication_lag for server %u:%s:%d (%s:%d) from %d (%d) to %d\n" , mysrvc->myhgc->hid , mysrvc->address, mysrvc->port, r->fields[1], atoi(r->fields[2]), atoi(r->fields[8]) , mysrvc->max_replication_lag , atoi(r->fields[21]));
+					mysrvc->max_replication_lag=atoi(r->fields[21]);
 					if (mysrvc->max_replication_lag == 0) { // we just changed it to 0
 						if (mysrvc->status == MYSQL_SERVER_STATUS_SHUNNED_REPLICATION_LAG) {
 							// the server is currently shunned due to replication lag
@@ -1798,21 +1807,39 @@ bool MySQL_HostGroups_Manager::commit() {
 						}
 					}
 				}
-				if (atoi(r->fields[9])!=atoi(r->fields[19])) {
+				if (atoi(r->fields[9])!=atoi(r->fields[22])) {
 					if (GloMTH->variables.hostgroup_manager_verbose)
-						proxy_info("Changing use_ssl for server %d:%s:%d (%s:%d) from %d (%d) to %d\n" , mysrvc->myhgc->hid , mysrvc->address, mysrvc->port, r->fields[1], atoi(r->fields[2]), atoi(r->fields[9]) , mysrvc->use_ssl , atoi(r->fields[19]));
-					mysrvc->use_ssl=atoi(r->fields[19]);
+						proxy_info("Changing use_ssl for server %d:%s:%d (%s:%d) from %d (%d) to %d\n" , mysrvc->myhgc->hid , mysrvc->address, mysrvc->port, r->fields[1], atoi(r->fields[2]), atoi(r->fields[9]) , mysrvc->use_ssl , atoi(r->fields[22]));
+					mysrvc->use_ssl=atoi(r->fields[22]);
 				}
-				if (atoi(r->fields[10])!=atoi(r->fields[20])) {
+				if (atoi(r->fields[10])!=atoi(r->fields[23])) {
 					if (GloMTH->variables.hostgroup_manager_verbose)
-						proxy_info("Changing max_latency_ms for server %d:%s:%d (%s:%d) from %d (%d) to %d\n" , mysrvc->myhgc->hid , mysrvc->address, mysrvc->port, r->fields[1], atoi(r->fields[2]), atoi(r->fields[10]) , mysrvc->max_latency_us/1000 , atoi(r->fields[20]));
-					mysrvc->max_latency_us=1000*atoi(r->fields[20]);
+						proxy_info("Changing max_latency_ms for server %d:%s:%d (%s:%d) from %d (%d) to %d\n" , mysrvc->myhgc->hid , mysrvc->address, mysrvc->port, r->fields[1], atoi(r->fields[2]), atoi(r->fields[10]) , mysrvc->max_latency_us/1000 , atoi(r->fields[23]));
+					mysrvc->max_latency_us=1000*atoi(r->fields[23]);
 				}
-				if (strcmp(r->fields[11],r->fields[21])) {
+				if (strcmp(r->fields[11],r->fields[24])) {
 					if (GloMTH->variables.hostgroup_manager_verbose)
-						proxy_info("Changing comment for server %d:%s:%d (%s:%d) from '%s' to '%s'\n" , mysrvc->myhgc->hid , mysrvc->address, mysrvc->port, r->fields[1], atoi(r->fields[2]), r->fields[11], r->fields[21]);
+						proxy_info("Changing comment for server %d:%s:%d (%s:%d) from '%s' to '%s'\n" , mysrvc->myhgc->hid , mysrvc->address, mysrvc->port, r->fields[1], atoi(r->fields[2]), r->fields[11], r->fields[24]);
 					free(mysrvc->comment);
-					mysrvc->comment=strdup(r->fields[21]);
+					mysrvc->comment=strdup(r->fields[24]);
+				}
+				if (strcmp(r->fields[12],r->fields[25])) {
+					if (GloMTH->variables.hostgroup_manager_verbose)
+						proxy_info("Changing ssl_ca for server %d:%s:%d (%s:%d) from '%s' to '%s'\n" , mysrvc->myhgc->hid , mysrvc->address, mysrvc->port, r->fields[1], atoi(r->fields[2]), r->fields[12], r->fields[25]);
+					free(mysrvc->ssl_ca);
+					mysrvc->ssl_ca=strdup(r->fields[25]);
+				}
+				if (strcmp(r->fields[13],r->fields[26])) {
+					if (GloMTH->variables.hostgroup_manager_verbose)
+						proxy_info("Changing ssl_cert for server %d:%s:%d (%s:%d) from '%s' to '%s'\n" , mysrvc->myhgc->hid , mysrvc->address, mysrvc->port, r->fields[1], atoi(r->fields[2]), r->fields[12], r->fields[26]);
+					free(mysrvc->ssl_cert);
+					mysrvc->ssl_cert=strdup(r->fields[26]);
+				}
+				if (strcmp(r->fields[14],r->fields[27])) {
+					if (GloMTH->variables.hostgroup_manager_verbose)
+						proxy_info("Changing ssl_key for server %d:%s:%d (%s:%d) from '%s' to '%s'\n" , mysrvc->myhgc->hid , mysrvc->address, mysrvc->port, r->fields[1], atoi(r->fields[2]), r->fields[12], r->fields[27]);
+					free(mysrvc->ssl_key);
+					mysrvc->ssl_key=strdup(r->fields[27]);
 				}
 				if (run_update) {
 					rc=(*proxy_sqlite3_bind_int64)(statement2, 1, mysrvc->weight); ASSERT_SQLITE_OK(rc, mydb);
@@ -1827,6 +1854,9 @@ bool MySQL_HostGroups_Manager::commit() {
 					rc=(*proxy_sqlite3_bind_int64)(statement2, 10, mysrvc->myhgc->hid); ASSERT_SQLITE_OK(rc, mydb);
 					rc=(*proxy_sqlite3_bind_text)(statement2, 11,  mysrvc->address, -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
 					rc=(*proxy_sqlite3_bind_int64)(statement2, 12, mysrvc->port); ASSERT_SQLITE_OK(rc, mydb);
+					rc=(*proxy_sqlite3_bind_text)(statement2, 13, mysrvc->ssl_ca, -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
+					rc=(*proxy_sqlite3_bind_text)(statement2, 14, mysrvc->ssl_cert, -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
+					rc=(*proxy_sqlite3_bind_text)(statement2, 15, mysrvc->ssl_key, -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
 					SAFE_SQLITE3_STEP2(statement2);
 					rc=(*proxy_sqlite3_clear_bindings)(statement2); ASSERT_SQLITE_OK(rc, mydb);
 					rc=(*proxy_sqlite3_reset)(statement2); ASSERT_SQLITE_OK(rc, mydb);
@@ -2198,11 +2228,11 @@ void MySQL_HostGroups_Manager::generate_mysql_servers_table(int *_onlyhg) {
 
 	PtrArray *lst=new PtrArray();
 	//sqlite3 *mydb3=mydb->get_db();
-	char *query1=(char *)"INSERT INTO mysql_servers VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)";
+	char *query1=(char *)"INSERT INTO mysql_servers VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)";
 	//rc=(*proxy_sqlite3_prepare_v2)(mydb3, query1, -1, &statement1, 0);
 	rc = mydb->prepare_v2(query1, &statement1);
 	ASSERT_SQLITE_OK(rc, mydb);
-	char *query32=(char *)"INSERT INTO mysql_servers VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13), (?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, ?25, ?26), (?27, ?28, ?29, ?30, ?31, ?32, ?33, ?34, ?35, ?36, ?37, ?38, ?39), (?40, ?41, ?42, ?43, ?44, ?45, ?46, ?47, ?48, ?49, ?50, ?51, ?52), (?53, ?54, ?55, ?56, ?57, ?58, ?59, ?60, ?61, ?62, ?63, ?64, ?65), (?66, ?67, ?68, ?69, ?70, ?71, ?72, ?73, ?74, ?75, ?76, ?77, ?78), (?79, ?80, ?81, ?82, ?83, ?84, ?85, ?86, ?87, ?88, ?89, ?90, ?91), (?92, ?93, ?94, ?95, ?96, ?97, ?98, ?99, ?100, ?101, ?102, ?103, ?104), (?105, ?106, ?107, ?108, ?109, ?110, ?111, ?112, ?113, ?114, ?115, ?116, ?117), (?118, ?119, ?120, ?121, ?122, ?123, ?124, ?125, ?126, ?127, ?128, ?129, ?130), (?131, ?132, ?133, ?134, ?135, ?136, ?137, ?138, ?139, ?140, ?141, ?142, ?143), (?144, ?145, ?146, ?147, ?148, ?149, ?150, ?151, ?152, ?153, ?154, ?155, ?156), (?157, ?158, ?159, ?160, ?161, ?162, ?163, ?164, ?165, ?166, ?167, ?168, ?169), (?170, ?171, ?172, ?173, ?174, ?175, ?176, ?177, ?178, ?179, ?180, ?181, ?182), (?183, ?184, ?185, ?186, ?187, ?188, ?189, ?190, ?191, ?192, ?193, ?194, ?195), (?196, ?197, ?198, ?199, ?200, ?201, ?202, ?203, ?204, ?205, ?206, ?207, ?208), (?209, ?210, ?211, ?212, ?213, ?214, ?215, ?216, ?217, ?218, ?219, ?220, ?221), (?222, ?223, ?224, ?225, ?226, ?227, ?228, ?229, ?230, ?231, ?232, ?233, ?234), (?235, ?236, ?237, ?238, ?239, ?240, ?241, ?242, ?243, ?244, ?245, ?246, ?247), (?248, ?249, ?250, ?251, ?252, ?253, ?254, ?255, ?256, ?257, ?258, ?259, ?260), (?261, ?262, ?263, ?264, ?265, ?266, ?267, ?268, ?269, ?270, ?271, ?272, ?273), (?274, ?275, ?276, ?277, ?278, ?279, ?280, ?281, ?282, ?283, ?284, ?285, ?286), (?287, ?288, ?289, ?290, ?291, ?292, ?293, ?294, ?295, ?296, ?297, ?298, ?299), (?300, ?301, ?302, ?303, ?304, ?305, ?306, ?307, ?308, ?309, ?310, ?311, ?312), (?313, ?314, ?315, ?316, ?317, ?318, ?319, ?320, ?321, ?322, ?323, ?324, ?325), (?326, ?327, ?328, ?329, ?330, ?331, ?332, ?333, ?334, ?335, ?336, ?337, ?338), (?339, ?340, ?341, ?342, ?343, ?344, ?345, ?346, ?347, ?348, ?349, ?350, ?351), (?352, ?353, ?354, ?355, ?356, ?357, ?358, ?359, ?360, ?361, ?362, ?363, ?364), (?365, ?366, ?367, ?368, ?369, ?370, ?371, ?372, ?373, ?374, ?375, ?376, ?377), (?378, ?379, ?380, ?381, ?382, ?383, ?384, ?385, ?386, ?387, ?388, ?389, ?390), (?391, ?392, ?393, ?394, ?395, ?396, ?397, ?398, ?399, ?400, ?401, ?402, ?403), (?404, ?405, ?406, ?407, ?408, ?409, ?410, ?411, ?412, ?413, ?414, ?415, ?416)";
+	char *query32=(char *)"INSERT INTO mysql_servers VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16), (?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, ?25, ?26, ?27, ?28, ?29, ?30, ?31, ?32), (?33, ?34, ?35, ?36, ?37, ?38, ?39, ?40, ?41, ?42, ?43, ?44, ?45, ?46, ?47, ?48), (?49, ?50, ?51, ?52, ?53, ?54, ?55, ?56, ?57, ?58, ?59, ?60, ?61, ?62, ?63, ?64), (?65, ?66, ?67, ?68, ?69, ?70, ?71, ?72, ?73, ?74, ?75, ?76, ?77, ?78, ?79, ?80), (?81, ?82, ?83, ?84, ?85, ?86, ?87, ?88, ?89, ?90, ?91, ?92, ?93, ?94, ?95, ?96), (?97, ?98, ?99, ?100, ?101, ?102, ?103, ?104, ?105, ?106, ?107, ?108, ?109, ?110, ?111, ?112), (?113, ?114, ?115, ?116, ?117, ?118, ?119, ?120, ?121, ?122, ?123, ?124, ?125, ?126, ?127, ?128), (?129, ?130, ?131, ?132, ?133, ?134, ?135, ?136, ?137, ?138, ?139, ?140, ?141, ?142, ?143, ?144), (?145, ?146, ?147, ?148, ?149, ?150, ?151, ?152, ?153, ?154, ?155, ?156, ?157, ?158, ?159, ?160), (?161, ?162, ?163, ?164, ?165, ?166, ?167, ?168, ?169, ?170, ?171, ?172, ?173, ?174, ?175, ?176), (?177, ?178, ?179, ?180, ?181, ?182, ?183, ?184, ?185, ?186, ?187, ?188, ?189, ?190, ?191, ?192), (?193, ?194, ?195, ?196, ?197, ?198, ?199, ?200, ?201, ?202, ?203, ?204, ?205, ?206, ?207, ?208), (?209, ?210, ?211, ?212, ?213, ?214, ?215, ?216, ?217, ?218, ?219, ?220, ?221, ?222, ?223, ?224), (?225, ?226, ?227, ?228, ?229, ?230, ?231, ?232, ?233, ?234, ?235, ?236, ?237, ?238, ?239, ?240), (?241, ?242, ?243, ?244, ?245, ?246, ?247, ?248, ?249, ?250, ?251, ?252, ?253, ?254, ?255, ?256), (?257, ?258, ?259, ?260, ?261, ?262, ?263, ?264, ?265, ?266, ?267, ?268, ?269, ?270, ?271, ?272), (?273, ?274, ?275, ?276, ?277, ?278, ?279, ?280, ?281, ?282, ?283, ?284, ?285, ?286, ?287, ?288), (?289, ?290, ?291, ?292, ?293, ?294, ?295, ?296, ?297, ?298, ?299, ?300, ?301, ?302, ?303, ?304), (?305, ?306, ?307, ?308, ?309, ?310, ?311, ?312, ?313, ?314, ?315, ?316, ?317, ?318, ?319, ?320), (?321, ?322, ?323, ?324, ?325, ?326, ?327, ?328, ?329, ?330, ?331, ?332, ?333, ?334, ?335, ?336), (?337, ?338, ?339, ?340, ?341, ?342, ?343, ?344, ?345, ?346, ?347, ?348, ?349, ?350, ?351, ?352), (?353, ?354, ?355, ?356, ?357, ?358, ?359, ?360, ?361, ?362, ?363, ?364, ?365, ?366, ?367, ?368), (?369, ?370, ?371, ?372, ?373, ?374, ?375, ?376, ?377, ?378, ?379, ?380, ?381, ?382, ?383, ?384), (?385, ?386, ?387, ?388, ?389, ?390, ?391, ?392, ?393, ?394, ?395, ?396, ?397, ?398, ?399, ?400), (?401, ?402, ?403, ?404, ?405, ?406, ?407, ?408, ?409, ?410, ?411, ?412, ?413, ?414, ?415, ?416), (?417, ?418, ?419, ?420, ?421, ?422, ?423, ?424, ?425, ?426, ?427, ?428, ?429, ?430, ?431, ?432), (?433, ?434, ?435, ?436, ?437, ?438, ?439, ?440, ?441, ?442, ?443, ?444, ?445, ?446, ?447, ?448), (?449, ?450, ?451, ?452, ?453, ?454, ?455, ?456, ?457, ?458, ?459, ?460, ?461, ?462, ?463, ?464), (?465, ?466, ?467, ?468, ?469, ?470, ?471, ?472, ?473, ?474, ?475, ?476, ?477, ?478, ?479, ?480), (?481, ?482, ?483, ?484, ?485, ?486, ?487, ?488, ?489, ?490, ?491, ?492, ?493, ?494, ?495, ?496), (?497, ?498, ?499, ?500, ?501, ?502, ?503, ?504, ?505, ?506, ?507, ?508, ?509, ?510, ?511, ?512)";
 	//rc=(*proxy_sqlite3_prepare_v2)(mydb3, query32, -1, &statement32, 0);
 	rc = mydb->prepare_v2(query32, &statement32);
 	ASSERT_SQLITE_OK(rc, mydb);
@@ -2245,7 +2275,7 @@ void MySQL_HostGroups_Manager::generate_mysql_servers_table(int *_onlyhg) {
 						st=(char *)"SHUNNED";
 						break;
 				}
-				fprintf(stderr,"HID: %d , address: %s , port: %d , gtid_port: %d , weight: %d , status: %s , max_connections: %u , max_replication_lag: %u , use_ssl: %u , max_latency_ms: %u , comment: %s\n", mysrvc->myhgc->hid, mysrvc->address, mysrvc->port, mysrvc->gtid_port, mysrvc->weight, st, mysrvc->max_connections, mysrvc->max_replication_lag, mysrvc->use_ssl, mysrvc->max_latency_us*1000, mysrvc->comment);
+				fprintf(stderr,"HID: %d , address: %s , port: %d , gtid_port: %d , weight: %d , status: %s , max_connections: %u , max_replication_lag: %u , use_ssl: %u , max_latency_ms: %u , comment: %s, ssl_ca: %s, ssl_cert: %s, ssl_key: %s\n", mysrvc->myhgc->hid, mysrvc->address, mysrvc->port, mysrvc->gtid_port, mysrvc->weight, st, mysrvc->max_connections, mysrvc->max_replication_lag, mysrvc->use_ssl, mysrvc->max_latency_us*1000, mysrvc->comment, mysrvc->ssl_ca, mysrvc->ssl_cert, mysrvc->ssl_key);
 			}
 			lst->add(mysrvc);
 			if (lst->len==32) {
@@ -2254,19 +2284,22 @@ void MySQL_HostGroups_Manager::generate_mysql_servers_table(int *_onlyhg) {
 					i--;
 					MySrvC *mysrvc=(MySrvC *)lst->remove_index_fast(0);
 					uintptr_t ptr=(uintptr_t)mysrvc;
-					rc=(*proxy_sqlite3_bind_int64)(statement32, (i*13)+1, mysrvc->myhgc->hid); ASSERT_SQLITE_OK(rc, mydb);
-					rc=(*proxy_sqlite3_bind_text)(statement32, (i*13)+2, mysrvc->address, -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
-					rc=(*proxy_sqlite3_bind_int64)(statement32, (i*13)+3, mysrvc->port); ASSERT_SQLITE_OK(rc, mydb);
-					rc=(*proxy_sqlite3_bind_int64)(statement32, (i*13)+4, mysrvc->gtid_port); ASSERT_SQLITE_OK(rc, mydb);
-					rc=(*proxy_sqlite3_bind_int64)(statement32, (i*13)+5, mysrvc->weight); ASSERT_SQLITE_OK(rc, mydb);
-					rc=(*proxy_sqlite3_bind_int64)(statement32, (i*13)+6, mysrvc->status); ASSERT_SQLITE_OK(rc, mydb);
-					rc=(*proxy_sqlite3_bind_int64)(statement32, (i*13)+7, mysrvc->compression); ASSERT_SQLITE_OK(rc, mydb);
-					rc=(*proxy_sqlite3_bind_int64)(statement32, (i*13)+8, mysrvc->max_connections); ASSERT_SQLITE_OK(rc, mydb);
-					rc=(*proxy_sqlite3_bind_int64)(statement32, (i*13)+9, mysrvc->max_replication_lag); ASSERT_SQLITE_OK(rc, mydb);
-					rc=(*proxy_sqlite3_bind_int64)(statement32, (i*13)+10, mysrvc->use_ssl); ASSERT_SQLITE_OK(rc, mydb);
-					rc=(*proxy_sqlite3_bind_int64)(statement32, (i*13)+11, mysrvc->max_latency_us/1000); ASSERT_SQLITE_OK(rc, mydb);
-					rc=(*proxy_sqlite3_bind_text)(statement32, (i*13)+12, mysrvc->comment, -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
-					rc=(*proxy_sqlite3_bind_int64)(statement32, (i*13)+13, ptr); ASSERT_SQLITE_OK(rc, mydb);
+					rc=(*proxy_sqlite3_bind_int64)(statement32, (i*16)+1, mysrvc->myhgc->hid); ASSERT_SQLITE_OK(rc, mydb);
+					rc=(*proxy_sqlite3_bind_text)(statement32, (i*16)+2, mysrvc->address, -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
+					rc=(*proxy_sqlite3_bind_int64)(statement32, (i*16)+3, mysrvc->port); ASSERT_SQLITE_OK(rc, mydb);
+					rc=(*proxy_sqlite3_bind_int64)(statement32, (i*16)+4, mysrvc->gtid_port); ASSERT_SQLITE_OK(rc, mydb);
+					rc=(*proxy_sqlite3_bind_int64)(statement32, (i*16)+5, mysrvc->weight); ASSERT_SQLITE_OK(rc, mydb);
+					rc=(*proxy_sqlite3_bind_int64)(statement32, (i*16)+6, mysrvc->status); ASSERT_SQLITE_OK(rc, mydb);
+					rc=(*proxy_sqlite3_bind_int64)(statement32, (i*16)+7, mysrvc->compression); ASSERT_SQLITE_OK(rc, mydb);
+					rc=(*proxy_sqlite3_bind_int64)(statement32, (i*16)+8, mysrvc->max_connections); ASSERT_SQLITE_OK(rc, mydb);
+					rc=(*proxy_sqlite3_bind_int64)(statement32, (i*16)+9, mysrvc->max_replication_lag); ASSERT_SQLITE_OK(rc, mydb);
+					rc=(*proxy_sqlite3_bind_int64)(statement32, (i*16)+10, mysrvc->use_ssl); ASSERT_SQLITE_OK(rc, mydb);
+					rc=(*proxy_sqlite3_bind_int64)(statement32, (i*16)+11, mysrvc->max_latency_us/1000); ASSERT_SQLITE_OK(rc, mydb);
+					rc=(*proxy_sqlite3_bind_text)(statement32, (i*16)+12, mysrvc->comment, -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
+					rc=(*proxy_sqlite3_bind_int64)(statement32, (i*16)+13, ptr); ASSERT_SQLITE_OK(rc, mydb);
+					rc=(*proxy_sqlite3_bind_text)(statement32, (i*16)+14, mysrvc->ssl_ca, -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
+					rc=(*proxy_sqlite3_bind_text)(statement32, (i*16)+15, mysrvc->ssl_cert, -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
+					rc=(*proxy_sqlite3_bind_text)(statement32, (i*16)+16, mysrvc->ssl_key, -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
 				}
 				SAFE_SQLITE3_STEP2(statement32);
 				rc=(*proxy_sqlite3_clear_bindings)(statement32); ASSERT_SQLITE_OK(rc, mydb);
@@ -2290,6 +2323,9 @@ void MySQL_HostGroups_Manager::generate_mysql_servers_table(int *_onlyhg) {
 		rc=(*proxy_sqlite3_bind_int64)(statement1, 11, mysrvc->max_latency_us/1000); ASSERT_SQLITE_OK(rc, mydb);
 		rc=(*proxy_sqlite3_bind_text)(statement1, 12, mysrvc->comment, -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
 		rc=(*proxy_sqlite3_bind_int64)(statement1, 13, ptr); ASSERT_SQLITE_OK(rc, mydb);
+		rc=(*proxy_sqlite3_bind_text)(statement1, 14, mysrvc->ssl_ca, -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
+		rc=(*proxy_sqlite3_bind_text)(statement1, 15, mysrvc->ssl_cert, -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
+		rc=(*proxy_sqlite3_bind_text)(statement1, 16, mysrvc->ssl_key, -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
 
 		SAFE_SQLITE3_STEP2(statement1);
 		rc=(*proxy_sqlite3_clear_bindings)(statement1); ASSERT_SQLITE_OK(rc, mydb);
@@ -2303,11 +2339,11 @@ void MySQL_HostGroups_Manager::generate_mysql_servers_table(int *_onlyhg) {
 		int affected_rows=0;
 		SQLite3_result *resultset=NULL;
 		if (_onlyhg==NULL) {
-			mydb->execute_statement((char *)"SELECT hostgroup_id hid, hostname, port, gtid_port gtid, weight, status, compression cmp, max_connections max_conns, max_replication_lag max_lag, use_ssl ssl, max_latency_ms max_lat, comment, mem_pointer FROM mysql_servers", &error , &cols , &affected_rows , &resultset);
+			mydb->execute_statement((char *)"SELECT hostgroup_id hid, hostname, port, gtid_port gtid, weight, status, compression cmp, max_connections max_conns, max_replication_lag max_lag, use_ssl ssl, max_latency_ms max_lat, comment, mem_pointer, ssl_ca, ssl_cert, ssl_key FROM mysql_servers", &error , &cols , &affected_rows , &resultset);
 		} else {
 			int hidonly=*_onlyhg;
-			char *q1 = (char *)malloc(256);
-			sprintf(q1,"SELECT hostgroup_id hid, hostname, port, gtid_port gtid, weight, status, compression cmp, max_connections max_conns, max_replication_lag max_lag, use_ssl ssl, max_latency_ms max_lat, comment, mem_pointer FROM mysql_servers WHERE hostgroup_id=%d" , hidonly);
+			char *q1 = (char *)malloc(269);
+			sprintf(q1,"SELECT hostgroup_id hid, hostname, port, gtid_port gtid, weight, status, compression cmp, max_connections max_conns, max_replication_lag max_lag, use_ssl ssl, max_latency_ms max_lat, comment, mem_pointer, ssl_ca, ssl_cert, ssl_key FROM mysql_servers WHERE hostgroup_id=%d" , hidonly);
 			mydb->execute_statement(q1, &error , &cols , &affected_rows , &resultset);
 			free(q1);
 		}
@@ -2572,7 +2608,7 @@ SQLite3_result * MySQL_HostGroups_Manager::dump_table_mysql_servers() {
 	int cols=0;
 	int affected_rows=0;
 	SQLite3_result *resultset=NULL;
-	char *query=(char *)"SELECT hostgroup_id, hostname, port, gtid_port, weight, CASE status WHEN 0 THEN \"ONLINE\" WHEN 1 THEN \"SHUNNED\" WHEN 2 THEN \"OFFLINE_SOFT\" WHEN 3 THEN \"OFFLINE_HARD\" WHEN 4 THEN \"SHUNNED\" END, compression, max_connections, max_replication_lag, use_ssl, max_latency_ms, comment FROM mysql_servers";
+	char *query=(char *)"SELECT hostgroup_id, hostname, port, gtid_port, weight, CASE status WHEN 0 THEN \"ONLINE\" WHEN 1 THEN \"SHUNNED\" WHEN 2 THEN \"OFFLINE_SOFT\" WHEN 3 THEN \"OFFLINE_HARD\" WHEN 4 THEN \"SHUNNED\" END, compression, max_connections, max_replication_lag, use_ssl, max_latency_ms, comment, ssl_ca, ssl_cert, ssl_key FROM mysql_servers";
 	proxy_debug(PROXY_DEBUG_MYSQL_CONNPOOL, 4, "%s\n", query);
 	mydb->execute_statement(query, &error , &cols , &affected_rows , &resultset);
 	wrunlock();
@@ -6929,6 +6965,9 @@ void MySQL_HostGroups_Manager::update_aws_aurora_set_reader(int _whid, int _rhid
 			GloAdmin->mysql_servers_wrlock();
 			unsigned int max_max_connections = 10;
 			unsigned int max_use_ssl = 0;
+			char* max_ssl_ca = nullptr;
+			char* max_ssl_cert = nullptr;
+			char* max_ssl_key = nullptr;
 			wrlock();
 			MyHGC *myhgc=MyHGC_lookup(_rhid);
 			{

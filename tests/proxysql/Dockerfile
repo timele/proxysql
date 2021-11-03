@@ -20,6 +20,16 @@ RUN apt-get update && apt-get install -y\
 # RUN cd /opt; git clone https://github.com/akopytov/sysbench.git
 # RUN cd /opt/sysbench; ./autogen.sh; ./configure --bindir=/usr/bin; make; make install
 
+#####
+# Courtesy of https://github.com/Dansyuqri/docker_mysql_ssl
+# Create a directory called certs in the image
+RUN mkdir -p /etc/certs
+# Copy all certs and keys into the newly created /etc/certs
+COPY certs/*.pem /etc/certs/
+# IMPORTANT: chown the /etc/certs folder so that it belongs to user:group mysql:mysql
+RUN chown -R root:root /etc/certs
+#####
+
 # RUN mkdir /opt/proxysql
 # RUN chmod 755 /opt/proxysql
 # COPY ./proxysql /opt/

@@ -194,10 +194,43 @@ def connect_disconnect_mysql(service: Node_Service):
     else:
         return False
 
-def get_mysql_management_connection(service: Node_Service, with_ssl: bool):
+def get_mysql_management_connection(service: Node_Service):
     """ Connect to mysql server and return a connection """
     return mysql_connect(service.management_settings())
 
-def get_mysql_service_connection(service: Node_Service, with_ssl: bool):
+def get_mysql_service_connection(service: Node_Service):
     """ Connect to mysql server and return a connection """
     return mysql_connect(service.service_settings())
+
+def get_table_columns(mysql_connection, table_name):
+    cursor = mysql_connection.cursor(buffered=True)
+    cursor.execute(f"select * from {table_name} limit 0")
+    column_names = [i[0] for i in cursor.description]
+    cursor.close()
+    return column_names
+
+def check_proxysql_table_mysql_servers(service: Node_Service):
+    """ Test proxysql::mysql_servers has 3 columns: """
+    columns_to_check = ["ssl_ca", "ssl_cert", "ssl_key"]
+    cnx = get_mysql_management_connection(service)
+    columns_current = get_table_columns(cnx, "mysql_servers")
+    cnx.close()
+    LOGGER.debug(f"mysql_servers: {columns_current}")
+    LOGGER.debug(f"{set(columns_to_check)} vs {set(columns_current)}")
+    return set(columns_to_check).issubset(set(columns_current))
+
+def check_proxysql_table_runtime_mysql_servers(service: Node_Service):
+    """ Test proxysql::runtime_mysql_servers has 3 columns: """
+    columns_to_check = ["ssl_ca", "ssl_cert", "ssl_key"]
+    cnx = get_mysql_management_connection(service)
+    columns_current = get_table_columns(cnx, "runtime_mysql_servers")
+    cnx.close()
+    LOGGER.debug(f"runtime_mysql_servers: {columns_current}")
+    LOGGER.debug(f"{set(columns_to_check)} vs {set(columns_current)}")
+    return set(columns_to_check).issubset(set(columns_current))
+
+def check_proxysql_tables(service: Node_Service):
+    """ Check proxysql target tables have the required columns """
+    assert check_proxysql_table_mysql_servers(service)
+    assert check_proxysql_table_runtime_mysql_servers(service)
+    return True

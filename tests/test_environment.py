@@ -1,7 +1,7 @@
 import pytest
 import os
 from time import sleep
-from tests.conftest import check_connection, connect_disconnect_mysql
+from tests.conftest import check_connection, connect_disconnect_mysql, check_proxysql_tables
 import logging
 from pathlib import Path, WindowsPath
 
@@ -47,15 +47,15 @@ def test_fr_3331(proxysql_service, mysql_0_service, mysql_1_service, mysql_2_ser
 
     LOGGER.info("\t- Nodes are acessible with MySQL client.")
 
-    """ Test proxysql::mysql_servers has 3 columns: """
+    """ Check proxysql::mysql_servers and proxysql::runtime_mysql_servers has 3 columns: """
+    assert check_proxysql_tables(proxysql_service)
 
-    # assert check_proxysql_table_mysql_servers(proxysql_service, with_ssl=False)
-    """ Test proxysql::runtime_mysql_servers has 3 columns: """
-
-    # assert check_proxysql_table_runtime_mysql_servers(proxysql_service, with_ssl=False)
     """ Test mysql connection proxysql -> mysql_0 is using TLS """
     # VERIFY_CLIENT/SERVER on both ends
     """ Test mysql connection proxysql -> mysql_1 is using TLS """
 
     """ Test mysql connection proxysql -> mysql_2 is using TLS """
 
+
+if __name__ == "__main__":
+    pytest.main()

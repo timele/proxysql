@@ -24,8 +24,8 @@ mysql_variables =
 	monitor_query_interval=30000
 	monitor_query_timeout=150
 	monitor_timer_cached=false
-	mysql-auditlog_filename="/tmp/proxysql_audit"
-	mysql-eventslog_filename="/tmp/proxysql_events"
+	mysql-auditlog_filename="/tmp/logs/"
+	mysql-eventslog_filename="/tmp/logs/"
 	ping_interval_server=2000
 	ping_timeout_server=150
 	default_schema="test_database"
@@ -67,6 +67,9 @@ mysql_servers =
 		hostgroup = 0
 		max_connections = 5
 		use_ssl = 1
+		ssl_ca = "/etc/certs/ca.pem"
+		ssl_cert = "/etc/certs/client-cert.pem"
+		ssl_key = "/etc/certs/client-key.pem"
 	},
 	{
 		address = "172.34.1.3"
@@ -74,6 +77,9 @@ mysql_servers =
 		weight = 2
 		hostgroup = 0
 		max_connections = 1
+		ssl_ca = "/etc/certs/ca.pem"
+		ssl_cert = "/etc/certs/client-cert.pem"
+		ssl_key = "/etc/certs/client-key.pem"
 	},
 	{
 		address = "172.34.1.4"
@@ -81,5 +87,8 @@ mysql_servers =
 		weight = 2
 		hostgroup = 0
 		max_connections = 10
+		ssl_ca = "/etc/certs/ca.pem"
+		ssl_cert = "/etc/certs/client-cert.pem"
+		ssl_key = "/etc/certs/client-key.pem"
 	}
 )
