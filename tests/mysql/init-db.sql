@@ -4,8 +4,8 @@ SET global general_log = 1;
 SET global connect_timeout = 600; -- connection establish timeout
 SET global tls_version='TLSv1.3';
 
-create database if not exists test_database;
-use test_database;
+create database if not exists testdatabase;
+use testdatabase;
 
 -- table cats
 CREATE TABLE if not exists cats
@@ -25,6 +25,8 @@ INSERT INTO cats ( name, owner, birth) VALUES
 
 -- access privileges
 CREATE USER testuser@'%' IDENTIFIED BY 'testuser';
-GRANT ALL PRIVILEGES ON test_database.* TO 'testuser'@'%';
-GRANT ALL PRIVILEGES ON test_database.* TO 'root'@'%';
+GRANT ALL PRIVILEGES ON testdatabase.* TO 'testuser'@'%';
+GRANT ALL PRIVILEGES ON testdatabase.* TO 'root'@'%';
+-- allow passwordless login for root from localhost
+-- ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '';
 FLUSH PRIVILEGES;

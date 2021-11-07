@@ -234,3 +234,21 @@ def check_proxysql_tables(service: Node_Service):
     assert check_proxysql_table_mysql_servers(service)
     assert check_proxysql_table_runtime_mysql_servers(service)
     return True
+
+
+def get_proxysql_table_value(service: Node_Service, hostname, table, column):
+    cnx = get_mysql_management_connection(service)
+    cursor = cnx.cursor(buffered=True)
+    cursor.execute(f"select {column} from {table} where hostname = \'{hostname}\' limit 1")
+    retval = cursor.fetchone()
+    cursor.close()
+    return retval[0]
+
+def get_proxysql_mysql_servers_value(service: Node_Service, hostname, column):
+    return get_proxysql_table_value(service, hostname, "mysql_servers", column)
+
+def get_proxysql_runtime_mysql_servers_value(service: Node_Service, hostname, column):
+    return get_proxysql_table_value(service, hostname, "runtime_mysql_servers", column)
+
+def proxysql_mysql_uses_ssl(service: Node_Service, hostname):
+    pass

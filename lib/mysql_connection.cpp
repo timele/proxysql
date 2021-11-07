@@ -659,12 +659,26 @@ void MySQL_Connection::connect_start() {
 		mysql_options4(mysql, MYSQL_OPT_CONNECT_ATTR_ADD, "mysql_bug_102266", "Avoid MySQL bug https://bugs.mysql.com/bug.php?id=102266 , https://github.com/sysown/proxysql/issues/3276");
 	}
 	if (parent->use_ssl) {
-		mysql_ssl_set(mysql,
-				mysql_thread___ssl_p2s_key,
-				mysql_thread___ssl_p2s_cert,
-				mysql_thread___ssl_p2s_ca,
-				mysql_thread___ssl_p2s_capath,
-				mysql_thread___ssl_p2s_cipher);
+		if (strlen(parent->ssl_ca) != 0 && strlen(parent->ssl_cert) != 0 && strlen(parent->ssl_key) != 0) {
+			proxy_info("\t!!!---> ADDR: %s - SSL: %s CA: %s, CRT: %s, KEY: %s\n", 
+					parent->address, parent->use_ssl ? "True" : "False", 
+					parent->ssl_ca, parent->ssl_cert, parent->ssl_key
+					);
+			mysql_ssl_set(mysql,
+					parent->ssl_key,
+					parent->ssl_cert,
+					parent->ssl_ca,
+					nullptr,
+					nullptr);
+		}
+		else {
+			mysql_ssl_set(mysql,
+					mysql_thread___ssl_p2s_key,
+					mysql_thread___ssl_p2s_cert,
+					mysql_thread___ssl_p2s_ca,
+					mysql_thread___ssl_p2s_capath,
+					mysql_thread___ssl_p2s_cipher);
+		}
 		mysql_options(mysql, MYSQL_OPT_SSL_CRL, mysql_thread___ssl_p2s_crl);
 		mysql_options(mysql, MYSQL_OPT_SSL_CRLPATH, mysql_thread___ssl_p2s_crlpath);
 	}

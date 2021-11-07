@@ -1593,7 +1593,7 @@ int MySQL_HostGroups_Manager::servers_add(SQLite3_result *resultset) {
 			rc=(*proxy_sqlite3_bind_text)(statement32, (idx*15)+2, r1->fields[1], -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
 			rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+3, atoi(r1->fields[2])); ASSERT_SQLITE_OK(rc, mydb);
 			rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+4, atoi(r1->fields[3])); ASSERT_SQLITE_OK(rc, mydb);
-			rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+5, atoi(r1->fields[5])); ASSERT_SQLITE_OK(rc, mydb);
+			rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+5, atoi(r1->fields[4])); ASSERT_SQLITE_OK(rc, mydb);
 			rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+6, status1); ASSERT_SQLITE_OK(rc, mydb);
 			rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+7, atoi(r1->fields[6])); ASSERT_SQLITE_OK(rc, mydb);
 			rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+8, atoi(r1->fields[7])); ASSERT_SQLITE_OK(rc, mydb);
@@ -1614,7 +1614,7 @@ int MySQL_HostGroups_Manager::servers_add(SQLite3_result *resultset) {
 			rc=(*proxy_sqlite3_bind_text)(statement1, 2, r1->fields[1], -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
 			rc=(*proxy_sqlite3_bind_int64)(statement1, 3, atoi(r1->fields[2])); ASSERT_SQLITE_OK(rc, mydb);
 			rc=(*proxy_sqlite3_bind_int64)(statement1, 4, atoi(r1->fields[3])); ASSERT_SQLITE_OK(rc, mydb);
-			rc=(*proxy_sqlite3_bind_int64)(statement1, 5, atoi(r1->fields[5])); ASSERT_SQLITE_OK(rc, mydb);
+			rc=(*proxy_sqlite3_bind_int64)(statement1, 5, atoi(r1->fields[4])); ASSERT_SQLITE_OK(rc, mydb);
 			rc=(*proxy_sqlite3_bind_int64)(statement1, 6, status1); ASSERT_SQLITE_OK(rc, mydb);
 			rc=(*proxy_sqlite3_bind_int64)(statement1, 7, atoi(r1->fields[6])); ASSERT_SQLITE_OK(rc, mydb);
 			rc=(*proxy_sqlite3_bind_int64)(statement1, 8, atoi(r1->fields[7])); ASSERT_SQLITE_OK(rc, mydb);
@@ -1967,7 +1967,7 @@ bool MySQL_HostGroups_Manager::commit() {
 			int cols=0;
 			int affected_rows=0;
 			SQLite3_result *resultset=NULL;
-			char *query=(char *)"SELECT hostgroup_id, hostname, port, gtid_port, CASE status WHEN 0 OR 1 OR 4 THEN 0 ELSE status END status, weight, compression, max_connections, max_replication_lag, use_ssl, max_latency_ms, comment FROM mysql_servers WHERE status<>3 ORDER BY hostgroup_id, hostname, port";
+			char *query=(char *)"SELECT hostgroup_id, hostname, port, gtid_port, CASE status WHEN 0 OR 1 OR 4 THEN 0 ELSE status END status, weight, compression, max_connections, max_replication_lag, use_ssl, max_latency_ms, comment, ssl_ca, ssl_cert, ssl_key FROM mysql_servers WHERE status<>3 ORDER BY hostgroup_id, hostname, port";
 			mydb->execute_statement(query, &error , &cols , &affected_rows , &resultset);
 			if (resultset) {
 				if (resultset->rows_count) {
@@ -2296,10 +2296,10 @@ void MySQL_HostGroups_Manager::generate_mysql_servers_table(int *_onlyhg) {
 					rc=(*proxy_sqlite3_bind_int64)(statement32, (i*16)+10, mysrvc->use_ssl); ASSERT_SQLITE_OK(rc, mydb);
 					rc=(*proxy_sqlite3_bind_int64)(statement32, (i*16)+11, mysrvc->max_latency_us/1000); ASSERT_SQLITE_OK(rc, mydb);
 					rc=(*proxy_sqlite3_bind_text)(statement32, (i*16)+12, mysrvc->comment, -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
-					rc=(*proxy_sqlite3_bind_int64)(statement32, (i*16)+13, ptr); ASSERT_SQLITE_OK(rc, mydb);
-					rc=(*proxy_sqlite3_bind_text)(statement32, (i*16)+14, mysrvc->ssl_ca, -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
-					rc=(*proxy_sqlite3_bind_text)(statement32, (i*16)+15, mysrvc->ssl_cert, -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
-					rc=(*proxy_sqlite3_bind_text)(statement32, (i*16)+16, mysrvc->ssl_key, -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
+					rc=(*proxy_sqlite3_bind_text)(statement32, (i*16)+13, mysrvc->ssl_ca, -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
+					rc=(*proxy_sqlite3_bind_text)(statement32, (i*16)+14, mysrvc->ssl_cert, -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
+					rc=(*proxy_sqlite3_bind_text)(statement32, (i*16)+15, mysrvc->ssl_key, -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
+					rc=(*proxy_sqlite3_bind_int64)(statement32, (i*16)+16, ptr); ASSERT_SQLITE_OK(rc, mydb);
 				}
 				SAFE_SQLITE3_STEP2(statement32);
 				rc=(*proxy_sqlite3_clear_bindings)(statement32); ASSERT_SQLITE_OK(rc, mydb);
@@ -2322,10 +2322,10 @@ void MySQL_HostGroups_Manager::generate_mysql_servers_table(int *_onlyhg) {
 		rc=(*proxy_sqlite3_bind_int64)(statement1, 10, mysrvc->use_ssl); ASSERT_SQLITE_OK(rc, mydb);
 		rc=(*proxy_sqlite3_bind_int64)(statement1, 11, mysrvc->max_latency_us/1000); ASSERT_SQLITE_OK(rc, mydb);
 		rc=(*proxy_sqlite3_bind_text)(statement1, 12, mysrvc->comment, -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
-		rc=(*proxy_sqlite3_bind_int64)(statement1, 13, ptr); ASSERT_SQLITE_OK(rc, mydb);
-		rc=(*proxy_sqlite3_bind_text)(statement1, 14, mysrvc->ssl_ca, -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
-		rc=(*proxy_sqlite3_bind_text)(statement1, 15, mysrvc->ssl_cert, -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
-		rc=(*proxy_sqlite3_bind_text)(statement1, 16, mysrvc->ssl_key, -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
+		rc=(*proxy_sqlite3_bind_text)(statement1, 13, mysrvc->ssl_ca, -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
+		rc=(*proxy_sqlite3_bind_text)(statement1, 14, mysrvc->ssl_cert, -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
+		rc=(*proxy_sqlite3_bind_text)(statement1, 15, mysrvc->ssl_key, -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, mydb);
+		rc=(*proxy_sqlite3_bind_int64)(statement1, 16, ptr); ASSERT_SQLITE_OK(rc, mydb);
 
 		SAFE_SQLITE3_STEP2(statement1);
 		rc=(*proxy_sqlite3_clear_bindings)(statement1); ASSERT_SQLITE_OK(rc, mydb);
@@ -2610,6 +2610,8 @@ SQLite3_result * MySQL_HostGroups_Manager::dump_table_mysql_servers() {
 	SQLite3_result *resultset=NULL;
 	char *query=(char *)"SELECT hostgroup_id, hostname, port, gtid_port, weight, CASE status WHEN 0 THEN \"ONLINE\" WHEN 1 THEN \"SHUNNED\" WHEN 2 THEN \"OFFLINE_SOFT\" WHEN 3 THEN \"OFFLINE_HARD\" WHEN 4 THEN \"SHUNNED\" END, compression, max_connections, max_replication_lag, use_ssl, max_latency_ms, comment, ssl_ca, ssl_cert, ssl_key FROM mysql_servers";
 	proxy_debug(PROXY_DEBUG_MYSQL_CONNPOOL, 4, "%s\n", query);
+	proxy_info("MySQL_HostGroups_Manager::dump_table_mysql_servers()\n");
+	proxy_info("query: %s\n", query);
 	mydb->execute_statement(query, &error , &cols , &affected_rows , &resultset);
 	wrunlock();
 	return resultset;

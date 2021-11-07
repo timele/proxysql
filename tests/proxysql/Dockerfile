@@ -26,6 +26,9 @@ RUN apt-get update && apt-get install -y\
 RUN mkdir -p /etc/certs
 # Copy all certs and keys into the newly created /etc/certs
 COPY certs/*.pem /etc/certs/
+COPY certs/proxysql-ca.pem /tmp
+COPY certs/proxysql-cert.pem /tmp
+COPY certs/proxysql-key.pem /tmp
 # IMPORTANT: chown the /etc/certs folder so that it belongs to user:group mysql:mysql
 RUN chown -R root:root /etc/certs
 #####

@@ -988,7 +988,7 @@ int ProxySQL_Config::Read_MySQL_Servers_from_configfile() {
 	if (root.exists("mysql_servers")==true) {
 		const Setting &mysql_servers = root["mysql_servers"];
 		int count = mysql_servers.getLength();
-		fprintf(stderr, "Found %d servers\n",count);
+		// fprintf(stderr, "Found %d servers\n",count);
 		char *q=(char *)"INSERT OR REPLACE INTO mysql_servers (hostname, port, gtid_port, hostgroup_id, compression, weight, status, max_connections, max_replication_lag, use_ssl, max_latency_ms, comment, ssl_ca, ssl_cert, ssl_key) VALUES (\"%s\", %d, %d, %d, %d, %d, \"%s\", %d, %d, %d, %d, '%s', '%s', '%s', '%s')";
 		for (i=0; i< count; i++) {
 			const Setting &server = mysql_servers[i];
@@ -1040,12 +1040,12 @@ int ProxySQL_Config::Read_MySQL_Servers_from_configfile() {
 			server.lookupValue("ssl_ca", ssl_ca);
 			server.lookupValue("ssl_cert", ssl_cert);
 			server.lookupValue("ssl_key", ssl_key);
-			fprintf(stderr, "ssl_ca: %s, ssl_cert: %s, ssl_key: %s\n", ssl_ca.c_str(), ssl_cert.c_str(), ssl_key.c_str());
+			// fprintf(stderr, "ssl_ca: %s, ssl_cert: %s, ssl_key: %s\n", ssl_ca.c_str(), ssl_cert.c_str(), ssl_key.c_str());
 			char *o1=strdup(comment.c_str());
 			char *o=escape_string_single_quotes(o1, false);
 			char *query=(char *)malloc(strlen(q)+strlen(status.c_str())+strlen(address.c_str())+strlen(o)+128);
 			sprintf(query,q, address.c_str(), port, gtid_port, hostgroup, compression, weight, status.c_str(), max_connections, max_replication_lag, use_ssl, max_latency_ms, o, ssl_ca.c_str(), ssl_cert.c_str(), ssl_key.c_str());
-			fprintf(stderr, "%s\n", query);
+			// fprintf(stderr, "%s\n", query);
 			admindb->execute(query);
 			if (o!=o1) free(o);
 			free(o1);

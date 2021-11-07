@@ -298,7 +298,9 @@ extern SQLite3_Server *GloSQLite3Server;
 
 extern char * binary_sha1;
 
-extern int ProxySQL_create_or_load_TLS(bool bootstrap, std::string& msg);
+extern int ProxySQL_create_or_load_TLS
+
+(bool bootstrap, std::string& msg);
 
 #define PANIC(msg)  { perror(msg); exit(EXIT_FAILURE); }
 
@@ -10807,23 +10809,27 @@ void ProxySQL_Admin::save_mysql_servers_runtime_to_database(bool _runtime) {
 		max_bulk_row_idx=max_bulk_row_idx*32;
 		for (std::vector<SQLite3_row *>::iterator it = resultset->rows.begin() ; it != resultset->rows.end(); ++it) {
 			SQLite3_row *r1=*it;
+			proxy_info("ProxSQL_Admin::save_mysql_servers_runtime_to_database()\n");
+			for(int i = 0; i != r1->cnt; ++i) {
+				proxy_info("r1->fields[%d]: %s\n", i, r1->fields[i]);
+			}
 			int idx=row_idx%32;
 			if (row_idx<max_bulk_row_idx) { // bulk
-				rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+1, atoi(r1->fields[0])); ASSERT_SQLITE_OK(rc, admindb);
-				rc=(*proxy_sqlite3_bind_text)(statement32, (idx*15)+2, r1->fields[1], -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, admindb);
-				rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+3, atoi(r1->fields[2])); ASSERT_SQLITE_OK(rc, admindb);
-				rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+4, atoi(r1->fields[3])); ASSERT_SQLITE_OK(rc, admindb);
+				rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+1, atoi(r1->fields[0])); ASSERT_SQLITE_OK(rc, admindb); // hostgroup
+				rc=(*proxy_sqlite3_bind_text)(statement32, (idx*15)+2, r1->fields[1], -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, admindb); // hostname	
+				rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+3, atoi(r1->fields[2])); ASSERT_SQLITE_OK(rc, admindb); // port
+				rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+4, atoi(r1->fields[3])); ASSERT_SQLITE_OK(rc, admindb); // gtid_port
 				rc=(*proxy_sqlite3_bind_text)(statement32, (idx*15)+5, ( _runtime ? r1->fields[5] : ( strcmp(r1->fields[5],"SHUNNED")==0 ? "ONLINE" : r1->fields[5] ) ), -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, admindb);
-				rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+6, atoi(r1->fields[4])); ASSERT_SQLITE_OK(rc, admindb);
-				rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+7, atoi(r1->fields[6])); ASSERT_SQLITE_OK(rc, admindb);
-				rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+8, atoi(r1->fields[7])); ASSERT_SQLITE_OK(rc, admindb);
-				rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+9, atoi(r1->fields[8])); ASSERT_SQLITE_OK(rc, admindb);
-				rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+10, atoi(r1->fields[9])); ASSERT_SQLITE_OK(rc, admindb);
-				rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+11, atoi(r1->fields[10])); ASSERT_SQLITE_OK(rc, admindb);
-				rc=(*proxy_sqlite3_bind_text)(statement32, (idx*15)+12, r1->fields[11], -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, admindb);
-				rc=(*proxy_sqlite3_bind_text)(statement32, (idx*15)+13, r1->fields[12], -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, admindb);
-				rc=(*proxy_sqlite3_bind_text)(statement32, (idx*15)+14, r1->fields[13], -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, admindb);
-				rc=(*proxy_sqlite3_bind_text)(statement32, (idx*15)+15, r1->fields[14], -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, admindb);
+				rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+6, atoi(r1->fields[4])); ASSERT_SQLITE_OK(rc, admindb); // weight
+				rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+7, atoi(r1->fields[6])); ASSERT_SQLITE_OK(rc, admindb); // compression
+				rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+8, atoi(r1->fields[7])); ASSERT_SQLITE_OK(rc, admindb); // max connection
+				rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+9, atoi(r1->fields[8])); ASSERT_SQLITE_OK(rc, admindb); // max replication lag
+				rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+10, atoi(r1->fields[9])); ASSERT_SQLITE_OK(rc, admindb); // use_ssl
+				rc=(*proxy_sqlite3_bind_int64)(statement32, (idx*15)+11, atoi(r1->fields[10])); ASSERT_SQLITE_OK(rc, admindb); // max_latenxy_ms
+				rc=(*proxy_sqlite3_bind_text)(statement32, (idx*15)+12, r1->fields[11], -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, admindb); // comment
+				rc=(*proxy_sqlite3_bind_text)(statement32, (idx*15)+13, r1->fields[12], -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, admindb); // ssl_ca
+				rc=(*proxy_sqlite3_bind_text)(statement32, (idx*15)+14, r1->fields[13], -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, admindb); // ssl_cert
+				rc=(*proxy_sqlite3_bind_text)(statement32, (idx*15)+15, r1->fields[14], -1, SQLITE_TRANSIENT); ASSERT_SQLITE_OK(rc, admindb); // ssl_key
 				if (idx==31) {
 					SAFE_SQLITE3_STEP2(statement32);
 					rc=(*proxy_sqlite3_clear_bindings)(statement32); ASSERT_SQLITE_OK(rc, admindb);

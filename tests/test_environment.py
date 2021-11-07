@@ -1,7 +1,10 @@
 import pytest
 import os
 from time import sleep
-from tests.conftest import check_connection, connect_disconnect_mysql, check_proxysql_tables
+from tests.conftest import (
+    check_connection, connect_disconnect_mysql, check_proxysql_tables, 
+    get_proxysql_mysql_servers_value, get_proxysql_runtime_mysql_servers_value
+)
 import logging
 from pathlib import Path, WindowsPath
 
@@ -50,12 +53,66 @@ def test_fr_3331(proxysql_service, mysql_0_service, mysql_1_service, mysql_2_ser
     """ Check proxysql::mysql_servers and proxysql::runtime_mysql_servers has 3 columns: """
     assert check_proxysql_tables(proxysql_service)
 
-    """ Test mysql connection proxysql -> mysql_0 is using TLS """
-    # VERIFY_CLIENT/SERVER on both ends
-    """ Test mysql connection proxysql -> mysql_1 is using TLS """
+    """ Check settings usage - mysql_servers """
+    assert get_proxysql_mysql_servers_value(proxysql_service, "172.34.1.2", "ssl_ca") == "/etc/certs/ca.pem"
+    assert get_proxysql_mysql_servers_value(proxysql_service, "172.34.1.2", "ssl_cert") == "/etc/certs/client-cert.pem"
+    assert get_proxysql_mysql_servers_value(proxysql_service, "172.34.1.2", "ssl_key") == "/etc/certs/client-key.pem"
+    assert get_proxysql_mysql_servers_value(proxysql_service, "172.34.1.2", "hostgroup_id") == "0"
+    assert get_proxysql_mysql_servers_value(proxysql_service, "172.34.1.2", "use_ssl") == "1"
+    assert get_proxysql_mysql_servers_value(proxysql_service, "172.34.1.2", "max_connections") == "5"
+    assert get_proxysql_mysql_servers_value(proxysql_service, "172.34.1.2", "status") == "ONLINE"
+    assert get_proxysql_mysql_servers_value(proxysql_service, "172.34.1.2", "weight") == "1"
 
-    """ Test mysql connection proxysql -> mysql_2 is using TLS """
+    assert get_proxysql_mysql_servers_value(proxysql_service, "172.34.1.3", "ssl_ca") == "/etc/certs/ca.pem"
+    assert get_proxysql_mysql_servers_value(proxysql_service, "172.34.1.3", "ssl_cert") == "/etc/certs/client-cert.pem"
+    assert get_proxysql_mysql_servers_value(proxysql_service, "172.34.1.3", "ssl_key") == "/etc/certs/client-key.pem"
+    assert get_proxysql_mysql_servers_value(proxysql_service, "172.34.1.3", "hostgroup_id") == "0"
+    assert get_proxysql_mysql_servers_value(proxysql_service, "172.34.1.3", "use_ssl") == "1"
+    assert get_proxysql_mysql_servers_value(proxysql_service, "172.34.1.3", "max_connections") == "10"
+    assert get_proxysql_mysql_servers_value(proxysql_service, "172.34.1.3", "status") == "ONLINE"
+    assert get_proxysql_mysql_servers_value(proxysql_service, "172.34.1.3", "weight") == "2"
 
+    assert get_proxysql_mysql_servers_value(proxysql_service, "172.34.1.4", "ssl_ca") == "/etc/certs/ca.pem"
+    assert get_proxysql_mysql_servers_value(proxysql_service, "172.34.1.4", "ssl_cert") == "/etc/certs/client-cert.pem"
+    assert get_proxysql_mysql_servers_value(proxysql_service, "172.34.1.4", "ssl_key") == "/etc/certs/client-key.pem"
+    assert get_proxysql_mysql_servers_value(proxysql_service, "172.34.1.4", "hostgroup_id") == "0"
+    assert get_proxysql_mysql_servers_value(proxysql_service, "172.34.1.4", "status") == "ONLINE"
+    assert get_proxysql_mysql_servers_value(proxysql_service, "172.34.1.4", "use_ssl") == "1"
+    assert get_proxysql_mysql_servers_value(proxysql_service, "172.34.1.4", "max_connections") == "15"
+    assert get_proxysql_mysql_servers_value(proxysql_service, "172.34.1.4", "weight") == "3"
+
+    """ Check settings usage - runtime_servers """
+    assert get_proxysql_runtime_mysql_servers_value(proxysql_service, "172.34.1.2", "ssl_ca") == "/etc/certs/ca.pem"
+    assert get_proxysql_runtime_mysql_servers_value(proxysql_service, "172.34.1.2", "ssl_cert") == "/etc/certs/client-cert.pem"
+    assert get_proxysql_runtime_mysql_servers_value(proxysql_service, "172.34.1.2", "ssl_key") == "/etc/certs/client-key.pem"
+    assert get_proxysql_runtime_mysql_servers_value(proxysql_service, "172.34.1.2", "hostgroup_id") == "0"
+    assert get_proxysql_runtime_mysql_servers_value(proxysql_service, "172.34.1.2", "use_ssl") == "1"
+    assert get_proxysql_runtime_mysql_servers_value(proxysql_service, "172.34.1.2", "max_connections") == "5"
+    assert get_proxysql_runtime_mysql_servers_value(proxysql_service, "172.34.1.2", "status") == "ONLINE"
+    assert get_proxysql_runtime_mysql_servers_value(proxysql_service, "172.34.1.2", "weight") == "0"
+
+    assert get_proxysql_runtime_mysql_servers_value(proxysql_service, "172.34.1.3", "ssl_ca") == "/etc/certs/ca.pem"
+    assert get_proxysql_runtime_mysql_servers_value(proxysql_service, "172.34.1.3", "ssl_cert") == "/etc/certs/client-cert.pem"
+    assert get_proxysql_runtime_mysql_servers_value(proxysql_service, "172.34.1.3", "ssl_key") == "/etc/certs/client-key.pem"
+    assert get_proxysql_runtime_mysql_servers_value(proxysql_service, "172.34.1.3", "hostgroup_id") == "0"
+    assert get_proxysql_runtime_mysql_servers_value(proxysql_service, "172.34.1.3", "use_ssl") == "1"
+    assert get_proxysql_runtime_mysql_servers_value(proxysql_service, "172.34.1.3", "max_connections") == "10"
+    assert get_proxysql_runtime_mysql_servers_value(proxysql_service, "172.34.1.3", "status") == "ONLINE"
+    assert get_proxysql_runtime_mysql_servers_value(proxysql_service, "172.34.1.3", "weight") == "0"
+
+    assert get_proxysql_runtime_mysql_servers_value(proxysql_service, "172.34.1.4", "ssl_ca") == "/etc/certs/ca.pem"
+    assert get_proxysql_runtime_mysql_servers_value(proxysql_service, "172.34.1.4", "ssl_cert") == "/etc/certs/client-cert.pem"
+    assert get_proxysql_runtime_mysql_servers_value(proxysql_service, "172.34.1.4", "ssl_key") == "/etc/certs/client-key.pem"
+    assert get_proxysql_runtime_mysql_servers_value(proxysql_service, "172.34.1.4", "hostgroup_id") == "0"
+    assert get_proxysql_runtime_mysql_servers_value(proxysql_service, "172.34.1.4", "use_ssl") == "1"
+    assert get_proxysql_runtime_mysql_servers_value(proxysql_service, "172.34.1.4", "max_connections") == "15"
+    assert get_proxysql_runtime_mysql_servers_value(proxysql_service, "172.34.1.4", "status") == "ONLINE"
+    assert get_proxysql_runtime_mysql_servers_value(proxysql_service, "172.34.1.4", "weight") == "0"
+
+    """ Check proxysql -> mysql connection is using SSL """
+    # assert proxysql_mysql_uses_ssl(mysql_0_service, "172.34.1.1")
+    # assert proxysql_mysql_uses_ssl(mysql_1_service, "172.34.1.1")
+    # assert proxysql_mysql_uses_ssl(mysql_1_service, "172.34.1.1")
 
 if __name__ == "__main__":
     pytest.main()
